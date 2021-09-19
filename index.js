@@ -7,6 +7,7 @@ const {
 
 const { Command } = require("commander");
 const program = new Command();
+
 program
   .option("-a, --action <type>", "choose action")
   .option("-i, --id <type>", "user id")
@@ -18,14 +19,13 @@ program.parse(process.argv);
 
 const argv = program.opts();
 
-// TODO: рефакторить
 function invokeAction({ action, id, name, email, phone }) {
   switch (action) {
     case "list":
       (async () => {
         try {
           const contacts = await listContacts();
-          console.log(contacts);
+          console.table(contacts);
         } catch (error) {
           console.log(error.message);
         }
@@ -50,7 +50,7 @@ function invokeAction({ action, id, name, email, phone }) {
       (async () => {
         try {
           const newContact = await addContact(name, email, phone);
-          console.log(newContact);
+          console.log("Added new contact", newContact);
         } catch (error) {
           console.log(error.message);
         }
@@ -58,7 +58,17 @@ function invokeAction({ action, id, name, email, phone }) {
       break;
 
     case "remove":
-      removeContact(id);
+      (async () => {
+        try {
+          const result = await removeContact(id);
+          if (!result) {
+            throw new Error(`Contact with id ${id} not found`);
+          }
+          console.log(`Contact with id ${id} was removed`);
+        } catch (error) {
+          console.log(error.message);
+        }
+      })();
       break;
 
     default:
